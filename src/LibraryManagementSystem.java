@@ -27,8 +27,10 @@ public class LibraryManagementSystem {
         setupLibrary();
         while (true) {
             displayMenu();
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+//            int choice = scanner.nextInt();
+//            scanner.nextLine(); // Consume newline
+
+            int choice = getValidNumberInput("Enter your choice: ");
 
             switch (choice) {
                 case 1:
@@ -65,6 +67,21 @@ public class LibraryManagementSystem {
             }
         }
     }
+// ------------------------------------------------------------------------------
+    private static int getValidNumberInput(String prompt) {
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine();
+
+            if (input.matches("\\d+")) { // Only digits allowed
+                return Integer.parseInt(input);
+            } else {
+                System.out.println(ANSI_RED + "Invalid input. Please enter a valid number." + ANSI_RESET);
+            }
+        }
+    }
+
+//    ---------------------------------------------------------------
 
     private static void setupLibrary() {
         System.out.println("=================== SET UP LIBRARY ===================");
@@ -78,7 +95,6 @@ public class LibraryManagementSystem {
             }
         }
 
-
         while (true) {
             System.out.print("=> Enter Library's Address: ");
             libraryAddress = scanner.nextLine();
@@ -88,6 +104,8 @@ public class LibraryManagementSystem {
                 System.out.println(ANSI_RED + "Invalid address. Please enter only letters, numbers, commas, and spaces (5 to 50 characters)." + ANSI_RESET);
             }
         }
+
+
         String currentTime = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy").format(new Date());
         System.out.println(ANSI_GRENN +
                 "\n\"" + libraryName.toUpperCase() + "\" Library is already created in \"" + libraryAddress.toUpperCase() +
@@ -131,25 +149,44 @@ public class LibraryManagementSystem {
         String title = scanner.nextLine();
         System.out.print("Enter Author Name: ");
         String authorName = scanner.nextLine();
-        System.out.print("Enter Author Active Years (birth-death, e.g., 1990-2005 or 1990-): ");
-        String activeYears = scanner.nextLine().trim();
+//        System.out.print("Enter Author Active Years (birth-death, e.g., 1990-2005 or 1990-): ");
+//        String activeYears = scanner.nextLine().trim();
 
+//        int deathYear = 0;
+//        int birthYear = 0;
+//        if (activeYears.matches("\\d{4}-\\d{0,4}")) { // Validate format
+//            String[] years = activeYears.split("-");
+//            birthYear = Integer.parseInt(years[0]);
+//            deathYear = years[1].isEmpty() ? -1 : Integer.parseInt(years[1]); // Handle open-ended case
+//
+//            if (deathYear != -1 && deathYear < birthYear) {
+//                System.out.println(ANSI_RED + "Death year cannot be earlier than birth year!" + ANSI_RESET);
+//            } else {
+//                System.out.println("Author active years set: " + birthYear + " to " + (deathYear == -1 ? "Present" : deathYear));
+//                // Process the values or create Author instance
+//            }
+//        } else {
+//            System.out.println(ANSI_RED + "Invalid input. Please use the format '1990-2005' or '1990-'." + ANSI_RESET);
+//        }
+        String activeYears;
         int deathYear = 0;
         int birthYear = 0;
-        if (activeYears.matches("\\d{4}-\\d{0,4}")) { // Validate format
-            String[] years = activeYears.split("-");
-            birthYear = Integer.parseInt(years[0]);
-            deathYear = years[1].isEmpty() ? -1 : Integer.parseInt(years[1]); // Handle open-ended case
-
-            if (deathYear != -1 && deathYear < birthYear) {
-                System.out.println(ANSI_RED + "Death year cannot be earlier than birth year!" + ANSI_RESET);
-            } else {
-                System.out.println("Author active years set: " + birthYear + " to " + (deathYear == -1 ? "Present" : deathYear));
-                // Process the values or create Author instance
+        while (true){
+            System.out.print("Enter Author Active Years (birth-death, e.g., 1990-2005 or 1990-): ");
+            activeYears = scanner.nextLine().trim();
+            if(activeYears.matches("\\d{4}-\\d{0,4}")){
+                String[] years = activeYears.split("-");
+                birthYear = Integer.parseInt(years[0]);
+                deathYear = years[1].isEmpty() ? -1 : Integer.parseInt(years[1]);
+                if(birthYear<deathYear){
+                    break;
+                }else System.out.println("The birth year must be smaller than death year!. Please try again!");
             }
-        } else {
-            System.out.println(ANSI_RED + "Invalid input. Please use the format '1990-2005' or '1990-'." + ANSI_RESET);
+            else System.out.println(ANSI_RED +  "Wrong format!. Ex: 1990-2020 🙏" + ANSI_RESET);
         }
+
+
+
 
         int publishedYear = 0;
         while(true){
@@ -229,10 +266,17 @@ public class LibraryManagementSystem {
     }
 
     private static void borrowBook() {
-        System.out.print("Enter Book ID to Borrow: ");
-        int id = scanner.nextInt();
+        String id_String;
+        int id = 0;
+        while (true){
+            System.out.print("Enter Book ID to Borrow: ");
+            id_String = scanner.nextLine();
+            if(id_String.matches("^\\d$")){
+                id = Integer.parseInt(id_String);
+                break;
+            }else System.out.println(ANSI_RED + "You can input only number!🙏" + ANSI_RESET);
+        }
 
-        scanner.nextLine();
         for (int i = 0; i < bookCount; i++) {
             if (books[i].getId() == id && books[i].getStatus().equals("Available")) {
                 books[i].setStatus("Unavailable"); // Keep status simple for logic
@@ -316,9 +360,14 @@ public class LibraryManagementSystem {
 
 
     private static void returnBook() {
-        System.out.print("Enter Book ID to Return: ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = 0;
+        while (true){
+            System.out.print("Enter Book ID to Return:");
+            id = scanner.nextInt();
+            if(String.valueOf(id).matches("^\\d$")){
+                break;
+            }else System.out.println(ANSI_RED + "You can input only number!🙏" + ANSI_RESET);
+        }
 
         for (int i = 0; i < bookCount; i++) {
             if (books[i].getId() == id && books[i].getStatus().equals("Unavailable")) {
@@ -338,15 +387,15 @@ public class LibraryManagementSystem {
 
 //
         for(int i =0; i< bookCount; i++){
-            if(books[i].getId() == id){
+            if(books[i].getId() == id) {
                 books[i].getAuthor().setName("REMOVED");
                 books[i].setTitle("REMOVED");
                 books[i].setStatus("REMOVED");
                 books[i].setPublishedYear(0);
                 books[i].getAuthor().setBirthYear(0);
                 books[i].getAuthor().setDeathYear(0);
-            }
+                System.out.println("You are book Deleted Successfully. thanks you🙏");
+            }else System.out.println("Book not found.");
         }
-        System.out.println("Book not found.");
     }
 }
