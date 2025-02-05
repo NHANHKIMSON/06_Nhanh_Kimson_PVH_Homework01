@@ -15,6 +15,7 @@ public class LibraryManagementSystem {
     static String libraryName;
     static String libraryAddress;
     static boolean IsInvalidInput = false;
+    static int rows = 0;
 
     public static final String ANSI_RED  = "\u001B[31m";
     public static final String ANSI_GRENN = "\u001B[32m";
@@ -25,13 +26,20 @@ public class LibraryManagementSystem {
 
     public static void main(String[] args) {
         setupLibrary();
+        int choice;
         while (true) {
             displayMenu();
-//            int choice = scanner.nextInt();
-//            scanner.nextLine(); // Consume newline
-
-            int choice = getValidNumberInput("Enter your choice: ");
-
+            while (true) {
+                String input;
+                input = scanner.nextLine();
+                if (input.matches("\\d+")) {
+                    choice = Integer.parseInt(input);
+                    break;
+                }else{
+                    System.out.println(ANSI_RED + "Invalid input. Please enter a valid number." + ANSI_RESET);
+                    displayMenu();
+                }
+            }
             switch (choice) {
                 case 1:
                     addBook();
@@ -50,7 +58,7 @@ public class LibraryManagementSystem {
                     break;
                 case 6:
                     System.out.print("Enter number of rows per page to show: ");
-                    int rows = scanner.nextInt();
+                    rows = scanner.nextInt();
                     scanner.nextLine(); // Consume newline
                     paginateBooks(rows);
                     break;
@@ -67,21 +75,7 @@ public class LibraryManagementSystem {
             }
         }
     }
-// ------------------------------------------------------------------------------
-    private static int getValidNumberInput(String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = scanner.nextLine();
 
-            if (input.matches("\\d+")) { // Only digits allowed
-                return Integer.parseInt(input);
-            } else {
-                System.out.println(ANSI_RED + "Invalid input. Please enter a valid number." + ANSI_RESET);
-            }
-        }
-    }
-
-//    ---------------------------------------------------------------
 
     private static void setupLibrary() {
         System.out.println("=================== SET UP LIBRARY ===================");
@@ -143,31 +137,37 @@ public class LibraryManagementSystem {
     }
 
     private static void addBook() {
+        String title;
+        String authorName;
         int bookId = bookCount + 1;
         System.out.println("Book Id: " + bookId);
-        System.out.print("Enter Book Title: ");
-        String title = scanner.nextLine();
-        System.out.print("Enter Author Name: ");
-        String authorName = scanner.nextLine();
-//        System.out.print("Enter Author Active Years (birth-death, e.g., 1990-2005 or 1990-): ");
-//        String activeYears = scanner.nextLine().trim();
+        while (true){
+            System.out.print("Enter Book Title: ");
+            title= scanner.nextLine();
+            if(title.matches("^[^0-9].*")){
+                break;
+            }else {
+                System.out.println(ANSI_RED + """
+                         _______________________________________
+                        | You can not input start with a number |
+                        |_______________________________________|
+                        """ + ANSI_RESET);
+            }
+        }
 
-//        int deathYear = 0;
-//        int birthYear = 0;
-//        if (activeYears.matches("\\d{4}-\\d{0,4}")) { // Validate format
-//            String[] years = activeYears.split("-");
-//            birthYear = Integer.parseInt(years[0]);
-//            deathYear = years[1].isEmpty() ? -1 : Integer.parseInt(years[1]); // Handle open-ended case
-//
-//            if (deathYear != -1 && deathYear < birthYear) {
-//                System.out.println(ANSI_RED + "Death year cannot be earlier than birth year!" + ANSI_RESET);
-//            } else {
-//                System.out.println("Author active years set: " + birthYear + " to " + (deathYear == -1 ? "Present" : deathYear));
-//                // Process the values or create Author instance
-//            }
-//        } else {
-//            System.out.println(ANSI_RED + "Invalid input. Please use the format '1990-2005' or '1990-'." + ANSI_RESET);
-//        }
+        while (true){
+            System.out.print("Enter Author Name: ");
+            authorName = scanner.nextLine();
+            if(authorName.matches("^[^0-9].*")){
+                break;
+            }else {
+                System.out.println(ANSI_RED + """
+                         _______________________________________
+                        | You can not input start with a number |
+                        |_______________________________________|
+                        """ + ANSI_RESET);
+            }
+        }
         String activeYears;
         int deathYear = 0;
         int birthYear = 0;
@@ -180,12 +180,18 @@ public class LibraryManagementSystem {
                 deathYear = years[1].isEmpty() ? -1 : Integer.parseInt(years[1]);
                 if(birthYear<deathYear){
                     break;
-                }else System.out.println("The birth year must be smaller than death year!. Please try again!");
+                }else System.out.println(ANSI_RED + """
+                         ________________________________________________________________________
+                        |   The birth year must be smaller than death year!. Please try again!   |
+                        |________________________________________________________________________|
+                        """ + ANSI_RESET);
             }
-            else System.out.println(ANSI_RED +  "Wrong format!. Ex: 1990-2020 🙏" + ANSI_RESET);
+            else System.out.println(ANSI_RED + """
+                         _______________________________________
+                        |    Wrong format!. Ex: 1990-2020 🙏.   |
+                        |_______________________________________|
+                        """ + ANSI_RESET);
         }
-
-
 
 
         int publishedYear = 0;
@@ -199,7 +205,9 @@ public class LibraryManagementSystem {
         Author author = new Author(authorName, birthYear, deathYear);
         Book book = new Book(title, author, publishedYear);
         books[bookCount++] = book;
-        System.out.println("Book added successfully!");
+        System.out.println(ANSI_GRENN + " | ------------------------- |");
+        System.out.println(" |  Book added successfully! | ");
+        System.out.println(" | ------------------------- |" + ANSI_RESET);
     }
 
     private static void showAllBooks() {
@@ -252,14 +260,14 @@ public class LibraryManagementSystem {
         t.addCell(ANSI_BLUE + "Status", cellStyle);
 
 
-        System.out.println("=============== AVAILABLE BOOKS INFO ===============");
+        System.out.println(ANSI_BLUE +  "=============== AVAILABLE BOOKS INFO ===============" + ANSI_RESET);
         for (int i = 0; i < bookCount; i++) {
             if (books[i].getStatus().equals("Available")) {
                 t.addCell(String.valueOf(books[i].getId()), cellStyle);
                 t.addCell(books[i].getTitle());
                 t.addCell(String.valueOf(books[i].getAuthor().getName() + "("  + books[i].getAuthor().getBirthYear() + "-" +  books[i].getAuthor().getDeathYear()) + ")", cellStyle);
                 t.addCell(String.valueOf(books[i].getPublishedYear()), cellStyle);
-                t.addCell(books[i].getStatus());
+                t.addCell(ANSI_GRENN +  books[i].getStatus() + ANSI_RESET);
             }
         }
         System.out.println(t.render());
@@ -274,17 +282,26 @@ public class LibraryManagementSystem {
             if(id_String.matches("^\\d$")){
                 id = Integer.parseInt(id_String);
                 break;
-            }else System.out.println(ANSI_RED + "You can input only number!🙏" + ANSI_RESET);
+            }else System.out.println(ANSI_RED + """
+                         _______________________________________
+                        |    You can input only number!🙏.      |
+                        |_______________________________________|
+                        """ + ANSI_RESET);
         }
 
         for (int i = 0; i < bookCount; i++) {
             if (books[i].getId() == id && books[i].getStatus().equals("Available")) {
                 books[i].setStatus("Unavailable"); // Keep status simple for logic
-                System.out.println(ANSI_YELLOW + "Book borrowed successfully!" + ANSI_RESET);
+                System.out.println(ANSI_GRENN + "| --------------------------- |");
+                System.out.println("| Book borrowed successfully! |");
+                System.out.println("| --------------------------- |" + ANSI_RESET);
+
                 return;
             }
         }
-        System.out.println("Book not found or already borrowed.");
+        System.out.println(ANSI_GRENN + "| ----------------------------------- |");
+        System.out.println("| Book not found or already borrowed. |");
+        System.out.println("| ----------------------------------- |" + ANSI_RESET);
     }
 
 //    Set row to show record
@@ -366,7 +383,11 @@ public class LibraryManagementSystem {
             id = scanner.nextInt();
             if(String.valueOf(id).matches("^\\d$")){
                 break;
-            }else System.out.println(ANSI_RED + "You can input only number!🙏" + ANSI_RESET);
+            }else System.out.println(ANSI_RED + """
+                         _______________________________________
+                        |    You can input only number!🙏.      |
+                        |_______________________________________|
+                        """ + ANSI_RESET);
         }
 
         for (int i = 0; i < bookCount; i++) {
@@ -381,11 +402,21 @@ public class LibraryManagementSystem {
 
 
     private static void deleteBook() {
-        System.out.print("Enter Book ID to Delete: ");
-        int id = scanner.nextInt();
-        scanner.nextLine(); // Consume newline
+        int id;
+        while (true){
+            System.out.print("Enter Book ID to Delete: ");
+            id = scanner.nextInt();
+            if(String.valueOf(id).matches("^\\d$")){
+                break;
+            }else System.out.println(ANSI_RED + """
+                         _______________________________________
+                        |    You can input only number!🙏.      |
+                        |_______________________________________|
+                        """ + ANSI_RESET);
+        }
 
-//
+
+        scanner.nextLine(); // Consume newline
         for(int i =0; i< bookCount; i++){
             if(books[i].getId() == id) {
                 books[i].getAuthor().setName("REMOVED");
@@ -399,3 +430,9 @@ public class LibraryManagementSystem {
         }
     }
 }
+
+// ___________________________________________________________________
+//|                         Nhanh: Kimson                             |
+//|                         Class: PVH                                |
+//|                         Thanks you🙏                              |
+//____________________________________________________________________
