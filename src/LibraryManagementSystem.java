@@ -15,7 +15,7 @@ public class LibraryManagementSystem {
     static String libraryName;
     static String libraryAddress;
     static boolean IsInvalidInput = false;
-    static int rows = 0;
+    static int rowsPerPage = 100;
 
     public static final String ANSI_RED  = "\u001B[31m";
     public static final String ANSI_GRENN = "\u001B[32m";
@@ -58,9 +58,8 @@ public class LibraryManagementSystem {
                     break;
                 case 6:
                     System.out.print("Enter number of rows per page to show: ");
-                    rows = scanner.nextInt();
-                    scanner.nextLine(); // Consume newline
-                    paginateBooks(rows);
+                    rowsPerPage = scanner.nextInt();
+                    scanner.nextLine();
                     break;
                 case 7:
                     deleteBook();
@@ -211,41 +210,83 @@ public class LibraryManagementSystem {
     }
 
     private static void showAllBooks() {
+        int currentPage = 0;
+        int totalPages = (int) Math.ceil((double) bookCount / rowsPerPage);
 
-        CellStyle cellStyle = new CellStyle(CellStyle.HorizontalAlign.center);
-        Table t = new Table(5, BorderStyle.UNICODE_BOX_DOUBLE_BORDER, ShownBorders.ALL);
+        while (true) {
+            // Display the current page of books
+            System.out.println("\n============== ALL BOOKS INFO (Page " + (currentPage + 1) + " of " + totalPages + ") ==============");
+            CellStyle cellStyle = new CellStyle(CellStyle.HorizontalAlign.center);
+            Table t = new Table(5, BorderStyle.UNICODE_BOX_DOUBLE_BORDER, ShownBorders.ALL);
 
-        t.addCell(ANSI_BLUE + "Id", cellStyle);
-        t.addCell(ANSI_BLUE + "Title", cellStyle);
-        t.addCell(ANSI_BLUE + "Author Birth Death ",cellStyle);
-        t.addCell( ANSI_BLUE + "Published Year",cellStyle);
-        t.addCell(ANSI_BLUE + "Status", cellStyle);
+            t.addCell(ANSI_BLUE + "Id", cellStyle);
+            t.addCell(ANSI_BLUE + "Title", cellStyle);
+            t.addCell(ANSI_BLUE + "Author Birth Death", cellStyle);
+            t.addCell(ANSI_BLUE + "Published Year", cellStyle);
+            t.addCell(ANSI_BLUE + "Status", cellStyle);
 
+            int startIndex = currentPage * rowsPerPage;
+            int endIndex = Math.min(startIndex + rowsPerPage, bookCount);
 
-        System.out.println("==============" + ANSI_BLUE + " ALL BOOKS INFO " + ANSI_RESET + "==============");
-        for (int i = 0; i < bookCount; i++) {
-            String bookId = books[i].getStatus().equals("REMOVED") ? ANSI_RED + "REMOVED" + ANSI_RESET : String.valueOf(books[i].getId()) ;
-            t.addCell(bookId, cellStyle);
+            for (int i = startIndex; i < endIndex; i++) {
+                String bookId = books[i].getStatus().equals("REMOVED") ? ANSI_RED + "REMOVED" + ANSI_RESET : String.valueOf(books[i].getId());
+                t.addCell(bookId, cellStyle);
 
-            String bookTitle = books[i].getTitle().equals("REMOVED") ? ANSI_RED + books[i].getTitle() + ANSI_RESET: ANSI_RESET + books[i].getTitle();
-            t.addCell(bookTitle, cellStyle);
+                String bookTitle = books[i].getTitle().equals("REMOVED") ? ANSI_RED + books[i].getTitle() + ANSI_RESET : books[i].getTitle();
+                t.addCell(bookTitle, cellStyle);
 
-            String authorInfo = books[i].getAuthor().getName().equals("REMOVED") ? ANSI_RED + " REMOVED (REMOVED - REMOVED)" + ANSI_RESET : ANSI_RESET + books[i].getAuthor().getName() + " (" +
-                    (books[i].getAuthor().getBirthYear() == 0 ? ANSI_RED + "REMOVED (REMOVED - REMOVED)" + ANSI_RESET : books[i].getAuthor().getBirthYear()) +
-                    " - " +
-                    (books[i].getAuthor().getDeathYear() == 0 ? ANSI_RED + "REMOVED (REMOVED - REMOVED)" + ANSI_RESET : books[i].getAuthor().getDeathYear()) +
-                    ")";
-            t.addCell(authorInfo, cellStyle);
+                String authorInfo = books[i].getAuthor().getName().equals("REMOVED") ? ANSI_RED + "REMOVED (REMOVED - REMOVED)" + ANSI_RESET : books[i].getAuthor().getName() + " (" +
+                        (books[i].getAuthor().getBirthYear() == 0 ? "REMOVED" : books[i].getAuthor().getBirthYear()) +
+                        " - " +
+                        (books[i].getAuthor().getDeathYear() == 0 ? "Present" : books[i].getAuthor().getDeathYear()) + ")";
+                t.addCell(authorInfo, cellStyle);
 
-            String publicYear = books[i].getStatus().equals("REMOVED") ? ANSI_RED + "REMOVED" + ANSI_RESET : String.valueOf(books[i].getPublishedYear());
-            t.addCell(publicYear, cellStyle);
-            String status = books[i].getStatus();
-            String statusBook = status.equals("Available") ? ANSI_GRENN + books[i].getStatus() + ANSI_RESET : (status.equals("REMOVED") ? ANSI_RED + "REMOVED" + ANSI_RESET : ANSI_YELLOW + "Unavailable" + ANSI_RESET  )  ;
-            t.addCell(statusBook, cellStyle);
+                String publicYear = books[i].getStatus().equals("REMOVED") ? ANSI_RED + "REMOVED" + ANSI_RESET : String.valueOf(books[i].getPublishedYear());
+                t.addCell(publicYear, cellStyle);
+
+                String status = books[i].getStatus();
+                String statusBook = status.equals("Available") ? ANSI_GRENN + books[i].getStatus() + ANSI_RESET : (status.equals("REMOVED") ? ANSI_RED + "REMOVED" + ANSI_RESET : ANSI_YELLOW + "Unavailable" + ANSI_RESET);
+                t.addCell(statusBook, cellStyle);
+            }
+
+            System.out.println(t.render());
+
+            // Pagination menu
+            System.out.println("\nChoose an option:");
+            System.out.println("1. First Page\t\t2. Next Page\t\t3. Previous Page\t\t4. Last Page\t\t5. Exit");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    currentPage = 0;
+                    break;
+                case 2:
+                    if (currentPage < totalPages - 1) {
+                        currentPage++;
+                    } else {
+                        System.out.println("You're already on the last page.");
+                    }
+                    break;
+                case 3:
+                    if (currentPage > 0) {
+                        currentPage--;
+                    } else {
+                        System.out.println("You're already on the first page.");
+                    }
+                    break;
+                case 4:
+                    currentPage = totalPages - 1;
+                    break;
+                case 5:
+                    System.out.println("Exiting pagination...");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+                    break;
+            }
         }
-        System.out.println(t.render());
-
-        System.out.println("\n");
     }
 
 
@@ -308,47 +349,6 @@ public class LibraryManagementSystem {
 
 //    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++=
 
-
-    private static void paginateBooks(int rowsPerPage) {
-        if (rowsPerPage <= 0) {
-            System.out.println(ANSI_RED + "Invalid row count. Please enter a positive number." + ANSI_RESET);
-            return;
-        }
-
-        int totalPages = (int) Math.ceil((double) bookCount / rowsPerPage);
-        int currentPage = 1;
-        Scanner input = new Scanner(System.in);
-
-        while (true) {
-            displayBooksPage(currentPage, rowsPerPage);
-
-            System.out.println(ANSI_BLUE + "Page " + currentPage + " of " + totalPages + ANSI_RESET);
-            System.out.print("Enter 'n' for next, 'p' for previous, or 'q' to quit: ");
-            String command = input.nextLine().trim().toLowerCase();
-
-            switch (command) {
-                case "n":
-                    if (currentPage < totalPages) {
-                        currentPage++;
-                    } else {
-                        System.out.println(ANSI_YELLOW + "No more pages." + ANSI_RESET);
-                    }
-                    break;
-                case "p":
-                    if (currentPage > 1) {
-                        currentPage--;
-                    } else {
-                        System.out.println(ANSI_YELLOW + "You are on the first page." + ANSI_RESET);
-                    }
-                    break;
-                case "q":
-                    return;
-                default:
-                    System.out.println(ANSI_RED + "Invalid input. Please enter 'n', 'p', or 'q'." + ANSI_RESET);
-            }
-        }
-    }
-
     private static void displayBooksPage(int page, int rowsPerPage) {
         int start = (page - 1) * rowsPerPage;
         int end = Math.min(start + rowsPerPage, bookCount);
@@ -377,11 +377,12 @@ public class LibraryManagementSystem {
 
 
     private static void returnBook() {
-        int id = 0;
+        int id;
+        String input;
         while (true){
-            System.out.print("Enter Book ID to Return:");
-            id = scanner.nextInt();
-            if(String.valueOf(id).matches("^\\d$")){
+            System.out.print("Enter Book ID to Return Book: ");
+            input = scanner.nextLine();
+            if(input.matches("^\\d$")){
                 break;
             }else System.out.println(ANSI_RED + """
                          _______________________________________
@@ -389,6 +390,7 @@ public class LibraryManagementSystem {
                         |_______________________________________|
                         """ + ANSI_RESET);
         }
+        id = Integer.parseInt(input);
 
         for (int i = 0; i < bookCount; i++) {
             if (books[i].getId() == id && books[i].getStatus().equals("Unavailable")) {
@@ -397,16 +399,17 @@ public class LibraryManagementSystem {
                 return;
             }
         }
-        System.out.println("Book not found or already available.");
+        System.out.println(ANSI_RED + "Book not found or already available." + ANSI_RESET);
     }
 
 
     private static void deleteBook() {
         int id;
+        String input;
         while (true){
             System.out.print("Enter Book ID to Delete: ");
-            id = scanner.nextInt();
-            if(String.valueOf(id).matches("^\\d$")){
+            input = scanner.nextLine();
+            if(input.matches("^\\d$")){
                 break;
             }else System.out.println(ANSI_RED + """
                          _______________________________________
@@ -414,9 +417,7 @@ public class LibraryManagementSystem {
                         |_______________________________________|
                         """ + ANSI_RESET);
         }
-
-
-        scanner.nextLine(); // Consume newline
+        id = Integer.parseInt(input);
         for(int i =0; i< bookCount; i++){
             if(books[i].getId() == id) {
                 books[i].getAuthor().setName("REMOVED");
@@ -425,8 +426,8 @@ public class LibraryManagementSystem {
                 books[i].setPublishedYear(0);
                 books[i].getAuthor().setBirthYear(0);
                 books[i].getAuthor().setDeathYear(0);
-                System.out.println("You are book Deleted Successfully. thanks you🙏");
-            }else System.out.println("Book not found.");
+                System.out.println(ANSI_GRENN + "You are book Deleted Successfully. thanks you🙏" + ANSI_RESET);
+            }else System.out.println(ANSI_RED + "Book not found." + ANSI_RESET);
         }
     }
 }
